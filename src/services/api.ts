@@ -1,3 +1,4 @@
+import { signOut } from "@/contexts/AuthContext";
 import axios, { AxiosError } from "axios";
 import { parseCookies, setCookie } from "nookies";
 
@@ -21,7 +22,8 @@ api.interceptors.response.use(response => {
   return response;
 }, (error) => {
   if(error.response?.status === 401) {
-    if(error.response.data?.code) {
+    if(error.response.data?.code === 'token.expired') {
+      console.log("Ahoi")
       cookies = parseCookies();
 
       const { 'nextauth.refreshToken': refreshToken } = cookies;
@@ -50,7 +52,7 @@ api.interceptors.response.use(response => {
           failedRequestsQueue.forEach((request) => request.onSuccess(token));
           failedRequestsQueue = [];
         }).catch(error => {
-          failedRequestsQueue.forEach((request) => request.onSuccess(error));
+          failedRequestsQueue.forEach((request) => request.onFailure(error));
           failedRequestsQueue = [];
         }).finally(() => {
           isRefreshing = false;
@@ -70,7 +72,10 @@ api.interceptors.response.use(response => {
         })
       })
     } else {
-
+      console.log("aqui2")
+      signOut();
     }
   }
+
+  return Promise.reject(error);
 })
